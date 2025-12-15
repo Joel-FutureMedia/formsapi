@@ -92,7 +92,7 @@ public class EmailService {
                         "</div>" +
                         "</div>";
 
-        String[] adminEmails = {"yoelowelly@gmail.com", "owellgraphics23@gmail.com"};
+        String[] adminEmails = {"eric.vanzyl@futuremedia.com.na", "Joel.Kalimbwe@futuremedia.com.na"};
         boolean allSent = true;
         for (String adminEmail : adminEmails) {
             try {
