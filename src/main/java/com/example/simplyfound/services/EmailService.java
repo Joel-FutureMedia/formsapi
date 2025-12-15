@@ -19,7 +19,7 @@ public class EmailService {
     @Autowired
     private JavaMailSender mailSender;
     
-    @Value("${app.frontend.url:http://localhost:3000}")
+    @Value("${app.frontend.url:https://forms.simplyfound.com.na}")
     private String frontendUrl;
 
     @Async("emailExecutor")
