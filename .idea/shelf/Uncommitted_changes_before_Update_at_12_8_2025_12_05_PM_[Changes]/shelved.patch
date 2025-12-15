@@ -1,0 +1,764 @@
+Index: simplyforms/src/components/FormPage.js
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>import React, { useState } from 'react';\r\nimport Step0 from './FormSteps/Step0';\r\nimport Step1 from './FormSteps/Step1';\r\nimport Step2 from './FormSteps/Step2';\r\nimport Step3 from './FormSteps/Step3';\r\nimport Step4 from './FormSteps/Step4';\r\nimport Step5 from './FormSteps/Step5';\r\nimport Step6 from './FormSteps/Step6';\r\nimport Step7 from './FormSteps/Step7';\r\nimport Confirmation from './FormSteps/Confirmation';\r\nimport ProgressBar from './ProgressBar';\r\nimport { submitForm } from '../services/api';\r\nimport logo from '../assets/logo.png';\r\nimport './FormPage.css';\r\n\r\nfunction FormPage() {\r\n  const [currentStep, setCurrentStep] = useState(0);\r\n  const [formData, setFormData] = useState({\r\n    // Step 1\r\n    fullName: '',\r\n    companyName: '',\r\n    email: '',\r\n    phoneNumber: '',\r\n    businessLocation: '',\r\n    // Step 2\r\n    aboutInformation: '',\r\n    industryId: '',\r\n    logoFile: null,\r\n    // Step 3\r\n    businessPhone: '',\r\n    businessEmail: '',\r\n    openingDaysId: '',\r\n    customHours: '',\r\n    // Step 4\r\n    services: [{ name: '', description: '' }],\r\n    // Step 5\r\n    colorPaletteId: '',\r\n    layoutStyleId: '',\r\n    imageFiles: [],\r\n    // Step 6\r\n    facebookUrl: '',\r\n    instagramUrl: '',\r\n    googleBusinessUrl: '',\r\n    tiktokUrl: '',\r\n    testimonials: '',\r\n    // Step 7\r\n    primaryCta: 'Call Now',\r\n    ctaLinkOrPhone: '',\r\n    secondaryAction: '',\r\n  });\r\n  const [submitted, setSubmitted] = useState(false);\r\n\r\n  const nextStep = () => {\r\n    if (currentStep < 7) {\r\n      setCurrentStep(currentStep + 1);\r\n    }\r\n  };\r\n\r\n  const prevStep = () => {\r\n    if (currentStep > 0) {\r\n      setCurrentStep(currentStep - 1);\r\n    }\r\n  };\r\n\r\n  const updateFormData = (data) => {\r\n    setFormData({ ...formData, ...data });\r\n  };\r\n\r\n  const handleSubmit = async () => {\r\n    try {\r\n      const response = await submitForm(formData);\r\n      setSubmitted(true);\r\n      setCurrentStep(8);\r\n    } catch (error) {\r\n      alert('Error submitting form. Please try again.');\r\n      console.error(error);\r\n    }\r\n  };\r\n\r\n  const renderStep = () => {\r\n    switch (currentStep) {\r\n      case 0:\r\n        return <Step0 onNext={nextStep} />;\r\n      case 1:\r\n        return <Step1 formData={formData} updateFormData={updateFormData} onNext={nextStep} onPrev={prevStep} />;\r\n      case 2:\r\n        return <Step2 formData={formData} updateFormData={updateFormData} onNext={nextStep} onPrev={prevStep} />;\r\n      case 3:\r\n        return <Step3 formData={formData} updateFormData={updateFormData} onNext={nextStep} onPrev={prevStep} />;\r\n      case 4:\r\n        return <Step4 formData={formData} updateFormData={updateFormData} onNext={nextStep} onPrev={prevStep} />;\r\n      case 5:\r\n        return <Step5 formData={formData} updateFormData={updateFormData} onNext={nextStep} onPrev={prevStep} />;\r\n      case 6:\r\n        return <Step6 formData={formData} updateFormData={updateFormData} onNext={nextStep} onPrev={prevStep} />;\r\n      case 7:\r\n        return <Step7 formData={formData} updateFormData={updateFormData} onSubmit={handleSubmit} onPrev={prevStep} />;\r\n      case 8:\r\n        return <Confirmation formData={formData} />;\r\n      default:\r\n        return <Step0 onNext={nextStep} />;\r\n    }\r\n  };\r\n\r\n  return (\r\n    <div className=\"form-page\">\r\n      <div className=\"form-container\">\r\n        {currentStep > 0 && currentStep < 8 && (\r\n          <>\r\n            <div className=\"form-logo-header\">\r\n              <img src={logo} alt=\"SimplyFound Logo\" className=\"form-top-logo\" />\r\n            </div>\r\n            <ProgressBar currentStep={currentStep} totalSteps={7} />\r\n          </>\r\n        )}\r\n        {renderStep()}\r\n      </div>\r\n    </div>\r\n  );\r\n}\r\n\r\nexport default FormPage;\r\n\r\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/simplyforms/src/components/FormPage.js b/simplyforms/src/components/FormPage.js
+--- a/simplyforms/src/components/FormPage.js	(revision 74907eac3744a1508a231fae3dfdc3bfb597e1d0)
++++ b/simplyforms/src/components/FormPage.js	(date 1765187546678)
+@@ -68,12 +68,37 @@
+ 
+   const handleSubmit = async () => {
+     try {
++      // Validate required fields before submission
++      if (!formData.primaryCta || !formData.ctaLinkOrPhone) {
++        alert('Please fill in all required fields in Step 7.');
++        return;
++      }
++      
+       const response = await submitForm(formData);
+       setSubmitted(true);
+       setCurrentStep(8);
+     } catch (error) {
+-      alert('Error submitting form. Please try again.');
+-      console.error(error);
++      console.error('Form submission error:', error);
++      let errorMessage = 'Error submitting form. Please try again.';
++      
++      if (error.response) {
++        // Server responded with error
++        const status = error.response.status;
++        const data = error.response.data;
++        
++        if (status === 500) {
++          errorMessage = 'Server error occurred. Please check all fields are filled correctly and try again.';
++        } else if (status === 400) {
++          errorMessage = 'Invalid data. Please check all required fields are filled.';
++        } else if (data && data.message) {
++          errorMessage = `Error: ${data.message}`;
++        }
++      } else if (error.request) {
++        // Request made but no response
++        errorMessage = 'No response from server. Please check your internet connection and try again.';
++      }
++      
++      alert(errorMessage);
+     }
+   };
+ 
+Index: simplyforms/SETUP.md
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+># SimplyForms Setup Guide\r\n\r\n## Quick Start\r\n\r\n1. **Install Dependencies**\r\n   ```bash\r\n   cd simplyforms\r\n   npm install\r\n   ```\r\n\r\n2. **Start the React App**\r\n   ```bash\r\n   npm start\r\n   ```\r\n\r\n3. **Access the Application**\r\n   - **Form**: http://localhost:3004\r\n   - **Admin Panel**: http://localhost:3004/admin\r\n\r\n**Note**: The app connects to the production backend API at `https://formapi.simplyfound.com.na/api`\r\n\r\n## Admin Login\r\n\r\nTo access the admin panel, you need to:\r\n1. Create a user in the database first (or use existing user)\r\n2. Login with email and password\r\n\r\n## Features\r\n\r\n### Form Features\r\n- ✅ 7-step multi-step form with progress bar\r\n- ✅ Logo upload\r\n- ✅ Multiple image uploads (up to 10)\r\n- ✅ Dynamic services/products addition\r\n- ✅ Color palette picker\r\n- ✅ Layout style selection\r\n- ✅ Responsive design\r\n- ✅ Form validation\r\n\r\n### Admin Panel Features\r\n- ✅ User authentication\r\n- ✅ View all form submissions\r\n- ✅ Download prompt PDF\r\n- ✅ Download logo separately\r\n- ✅ Download images separately\r\n- ✅ CRUD for Users\r\n- ✅ CRUD for Opening Days\r\n- ✅ CRUD for Opening Hours\r\n\r\n## API Endpoints Used\r\n\r\n- `/api/industries` - Get industries\r\n- `/api/color-palettes/picker` - Get color palettes\r\n- `/api/layout-styles` - Get layout styles\r\n- `/api/opening-days` - Get opening days\r\n- `/api/client-journeys/submit` - Submit form\r\n- `/api/client-journeys` - Get all submissions\r\n- `/api/client-journeys/{id}/download-prompt` - Download PDF\r\n- `/api/client-journeys/logos/view/{fileName}` - View/Download logo\r\n- `/api/client-journeys/images/view/{fileName}` - View/Download image\r\n- `/api/users/login` - Admin login\r\n- `/api/users` - User CRUD\r\n- `/api/opening-days` - Opening Days CRUD\r\n- `/api/opening-hours` - Opening Hours CRUD\r\n\r\n## Notes\r\n\r\n- The React app runs on port 3004\r\n- The backend API is hosted at `https://formapi.simplyfound.com.na`\r\n- CORS is configured to allow requests from `http://localhost:3004` and `https://forms.simplyfound.com.na`\r\n- All API calls are made to the production backend\r\n\r\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/simplyforms/SETUP.md b/simplyforms/SETUP.md
+--- a/simplyforms/SETUP.md	(revision 74907eac3744a1508a231fae3dfdc3bfb597e1d0)
++++ b/simplyforms/SETUP.md	(date 1765187573651)
+@@ -17,7 +17,7 @@
+    - **Form**: http://localhost:3004
+    - **Admin Panel**: http://localhost:3004/admin
+ 
+-**Note**: The app connects to the production backend API at `https://formapi.simplyfound.com.na/api`
++**Note**: The app connects to the production backend API at `https://clientapi.simplyfound.com.na/api`
+ 
+ ## Admin Login
+ 
+@@ -66,7 +66,7 @@
+ ## Notes
+ 
+ - The React app runs on port 3004
+-- The backend API is hosted at `https://formapi.simplyfound.com.na`
++- The backend API is hosted at `https://clientapi.simplyfound.com.na`
+ - CORS is configured to allow requests from `http://localhost:3004` and `https://forms.simplyfound.com.na`
+ - All API calls are made to the production backend
+ 
+Index: simplyforms/src/components/FormSteps/Step1.js
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>import React from 'react';\r\nimport './FormStep.css';\r\n\r\nfunction Step1({ formData, updateFormData, onNext, onPrev }) {\r\n  const handleChange = (e) => {\r\n    updateFormData({ [e.target.name]: e.target.value });\r\n  };\r\n\r\n  const handleNext = () => {\r\n    if (formData.fullName && formData.companyName && formData.email && formData.businessLocation) {\r\n      onNext();\r\n    } else {\r\n      alert('Please fill in all required fields');\r\n    }\r\n  };\r\n\r\n  return (\r\n    <div className=\"form-step\">\r\n      <h2 className=\"step-header\">Let's get started</h2>\r\n      <p className=\"step-subtext\">\r\n        We'll use these details to set up your website draft. This takes less than 7 minutes.\r\n      </p>\r\n\r\n      <div className=\"form-group\">\r\n        <label>Full Name *</label>\r\n        <input\r\n          type=\"text\"\r\n          name=\"fullName\"\r\n          value={formData.fullName}\r\n          onChange={handleChange}\r\n          placeholder=\"John Doe\"\r\n          required\r\n        />\r\n      </div>\r\n\r\n      <div className=\"form-group\">\r\n        <label>Company Name *</label>\r\n        <input\r\n          type=\"text\"\r\n          name=\"companyName\"\r\n          value={formData.companyName}\r\n          onChange={handleChange}\r\n          placeholder=\"ABC Company\"\r\n          required\r\n        />\r\n      </div>\r\n\r\n      <div className=\"form-group\">\r\n        <label>Email Address *</label>\r\n        <input\r\n          type=\"email\"\r\n          name=\"email\"\r\n          value={formData.email}\r\n          onChange={handleChange}\r\n          placeholder=\"john@example.com\"\r\n          required\r\n        />\r\n      </div>\r\n\r\n      <div className=\"form-group\">\r\n        <label>Phone Number (Optional)</label>\r\n        <input\r\n          type=\"text\"\r\n          name=\"phoneNumber\"\r\n          value={formData.phoneNumber}\r\n          onChange={handleChange}\r\n          placeholder=\"+264 81 123 4567\"\r\n        />\r\n      </div>\r\n\r\n      <div className=\"form-group\">\r\n        <label>Business Location *</label>\r\n        <input\r\n          type=\"text\"\r\n          name=\"businessLocation\"\r\n          value={formData.businessLocation}\r\n          onChange={handleChange}\r\n          placeholder=\"Windhoek, Namibia\"\r\n          required\r\n        />\r\n      </div>\r\n\r\n      <p className=\"step-footer-text\">Your info stays private and can be changed anytime.</p>\r\n\r\n      <div className=\"step-buttons\">\r\n        <button className=\"btn-secondary\" onClick={onPrev}>← Back</button>\r\n        <button className=\"btn-primary\" onClick={handleNext}>Continue →</button>\r\n      </div>\r\n    </div>\r\n  );\r\n}\r\n\r\nexport default Step1;\r\n\r\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/simplyforms/src/components/FormSteps/Step1.js b/simplyforms/src/components/FormSteps/Step1.js
+--- a/simplyforms/src/components/FormSteps/Step1.js	(revision 74907eac3744a1508a231fae3dfdc3bfb597e1d0)
++++ b/simplyforms/src/components/FormSteps/Step1.js	(date 1765184893567)
+@@ -26,7 +26,7 @@
+         <input
+           type="text"
+           name="fullName"
+-          value={formData.fullName}
++          value={formData.fullName || ''}
+           onChange={handleChange}
+           placeholder="John Doe"
+           required
+@@ -38,7 +38,7 @@
+         <input
+           type="text"
+           name="companyName"
+-          value={formData.companyName}
++          value={formData.companyName || ''}
+           onChange={handleChange}
+           placeholder="ABC Company"
+           required
+@@ -50,7 +50,7 @@
+         <input
+           type="email"
+           name="email"
+-          value={formData.email}
++          value={formData.email || ''}
+           onChange={handleChange}
+           placeholder="john@example.com"
+           required
+@@ -62,7 +62,7 @@
+         <input
+           type="text"
+           name="phoneNumber"
+-          value={formData.phoneNumber}
++          value={formData.phoneNumber || ''}
+           onChange={handleChange}
+           placeholder="+264 81 123 4567"
+         />
+@@ -73,7 +73,7 @@
+         <input
+           type="text"
+           name="businessLocation"
+-          value={formData.businessLocation}
++          value={formData.businessLocation || ''}
+           onChange={handleChange}
+           placeholder="Windhoek, Namibia"
+           required
+Index: .idea/vcs.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+><?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n<project version=\"4\">\r\n  <component name=\"VcsDirectoryMappings\">\r\n    <mapping directory=\"$PROJECT_DIR$\" vcs=\"Git\" />\r\n    <mapping directory=\"$PROJECT_DIR$/giti/forms\" vcs=\"Git\" />\r\n  </component>\r\n</project>
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/.idea/vcs.xml b/.idea/vcs.xml
+--- a/.idea/vcs.xml	(revision 74907eac3744a1508a231fae3dfdc3bfb597e1d0)
++++ b/.idea/vcs.xml	(date 1765188201960)
+@@ -2,6 +2,7 @@
+ <project version="4">
+   <component name="VcsDirectoryMappings">
+     <mapping directory="$PROJECT_DIR$" vcs="Git" />
++    <mapping directory="$PROJECT_DIR$/git23/forms" vcs="Git" />
+     <mapping directory="$PROJECT_DIR$/giti/forms" vcs="Git" />
+   </component>
+ </project>
+\ No newline at end of file
+Index: simplyforms/src/components/FormSteps/Step6.js
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>import React from 'react';\r\nimport './FormStep.css';\r\n\r\nfunction Step6({ formData, updateFormData, onNext, onPrev }) {\r\n  const handleChange = (e) => {\r\n    updateFormData({ [e.target.name]: e.target.value });\r\n  };\r\n\r\n  const handleNext = () => {\r\n    onNext();\r\n  };\r\n\r\n  return (\r\n    <div className=\"form-step\">\r\n      <h2 className=\"step-header\">Help us build trust on your website</h2>\r\n\r\n      <div className=\"form-section\">\r\n        <h3>A. Social Links</h3>\r\n        <div className=\"form-group\">\r\n          <label>Facebook Page URL (Optional)</label>\r\n          <input\r\n            type=\"url\"\r\n            name=\"facebookUrl\"\r\n            value={formData.facebookUrl}\r\n            onChange={handleChange}\r\n            placeholder=\"facebook.com/yourbusiness\"\r\n          />\r\n        </div>\r\n\r\n        <div className=\"form-group\">\r\n          <label>Instagram URL (Optional)</label>\r\n          <input\r\n            type=\"url\"\r\n            name=\"instagramUrl\"\r\n            value={formData.instagramUrl}\r\n            onChange={handleChange}\r\n            placeholder=\"instagram.com/yourbusiness\"\r\n          />\r\n        </div>\r\n\r\n        <div className=\"form-group\">\r\n          <label>Google Business Profile URL (Optional)</label>\r\n          <input\r\n            type=\"url\"\r\n            name=\"googleBusinessUrl\"\r\n            value={formData.googleBusinessUrl}\r\n            onChange={handleChange}\r\n            placeholder=\"g.page/yourbusiness\"\r\n          />\r\n        </div>\r\n\r\n        <div className=\"form-group\">\r\n          <label>TikTok URL (Optional)</label>\r\n          <input\r\n            type=\"url\"\r\n            name=\"tiktokUrl\"\r\n            value={formData.tiktokUrl}\r\n            onChange={handleChange}\r\n            placeholder=\"tiktok.com/@yourbusiness\"\r\n          />\r\n        </div>\r\n      </div>\r\n\r\n      <div className=\"form-section\">\r\n        <h3>B. Testimonials</h3>\r\n        <div className=\"form-group\">\r\n          <label>Testimonials (Optional)</label>\r\n          <textarea\r\n            name=\"testimonials\"\r\n            value={formData.testimonials}\r\n            onChange={handleChange}\r\n            placeholder=\"Paste any reviews you'd like us to use. Or leave this blank.\"\r\n            rows=\"5\"\r\n          />\r\n        </div>\r\n      </div>\r\n\r\n      <p className=\"step-footer-text\">All links remain private and secure.</p>\r\n\r\n      <div className=\"step-buttons\">\r\n        <button className=\"btn-secondary\" onClick={onPrev}>← Back</button>\r\n        <button className=\"btn-primary\" onClick={handleNext}>Continue →</button>\r\n      </div>\r\n    </div>\r\n  );\r\n}\r\n\r\nexport default Step6;\r\n\r\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/simplyforms/src/components/FormSteps/Step6.js b/simplyforms/src/components/FormSteps/Step6.js
+--- a/simplyforms/src/components/FormSteps/Step6.js	(revision 74907eac3744a1508a231fae3dfdc3bfb597e1d0)
++++ b/simplyforms/src/components/FormSteps/Step6.js	(date 1765184893582)
+@@ -21,7 +21,7 @@
+           <input
+             type="url"
+             name="facebookUrl"
+-            value={formData.facebookUrl}
++            value={formData.facebookUrl || ''}
+             onChange={handleChange}
+             placeholder="facebook.com/yourbusiness"
+           />
+@@ -32,7 +32,7 @@
+           <input
+             type="url"
+             name="instagramUrl"
+-            value={formData.instagramUrl}
++            value={formData.instagramUrl || ''}
+             onChange={handleChange}
+             placeholder="instagram.com/yourbusiness"
+           />
+@@ -43,7 +43,7 @@
+           <input
+             type="url"
+             name="googleBusinessUrl"
+-            value={formData.googleBusinessUrl}
++            value={formData.googleBusinessUrl || ''}
+             onChange={handleChange}
+             placeholder="g.page/yourbusiness"
+           />
+@@ -54,7 +54,7 @@
+           <input
+             type="url"
+             name="tiktokUrl"
+-            value={formData.tiktokUrl}
++            value={formData.tiktokUrl || ''}
+             onChange={handleChange}
+             placeholder="tiktok.com/@yourbusiness"
+           />
+@@ -67,7 +67,7 @@
+           <label>Testimonials (Optional)</label>
+           <textarea
+             name="testimonials"
+-            value={formData.testimonials}
++            value={formData.testimonials || ''}
+             onChange={handleChange}
+             placeholder="Paste any reviews you'd like us to use. Or leave this blank."
+             rows="5"
+Index: simplyforms/src/components/FormSteps/Step4.js
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>import React from 'react';\r\nimport './FormStep.css';\r\n\r\nfunction Step4({ formData, updateFormData, onNext, onPrev }) {\r\n  const addService = () => {\r\n    const newServices = [...formData.services, { name: '', description: '' }];\r\n    updateFormData({ services: newServices });\r\n  };\r\n\r\n  const removeService = (index) => {\r\n    const newServices = formData.services.filter((_, i) => i !== index);\r\n    updateFormData({ services: newServices });\r\n  };\r\n\r\n  const updateService = (index, field, value) => {\r\n    const newServices = [...formData.services];\r\n    newServices[index][field] = value;\r\n    updateFormData({ services: newServices });\r\n  };\r\n\r\n  const handleNext = () => {\r\n    onNext();\r\n  };\r\n\r\n  return (\r\n    <div className=\"form-step\">\r\n      <h2 className=\"step-header\">What do you offer?</h2>\r\n      <p className=\"step-subtext\">\r\n        List your main products or services. We'll turn this into clean website sections for you.\r\n      </p>\r\n\r\n      {formData.services.map((service, index) => (\r\n        <div key={index} className=\"service-block\">\r\n          <div className=\"service-header\">\r\n            <h3>Service/Product {index + 1}</h3>\r\n            {formData.services.length > 1 && (\r\n              <button\r\n                type=\"button\"\r\n                className=\"btn-remove\"\r\n                onClick={() => removeService(index)}\r\n              >\r\n                Remove\r\n              </button>\r\n            )}\r\n          </div>\r\n\r\n          <div className=\"form-group\">\r\n            <label>Service/Product Name</label>\r\n            <input\r\n              type=\"text\"\r\n              value={service.name}\r\n              onChange={(e) => updateService(index, 'name', e.target.value)}\r\n              placeholder=\"House Painting\"\r\n            />\r\n          </div>\r\n\r\n          <div className=\"form-group\">\r\n            <label>One-line description</label>\r\n            <input\r\n              type=\"text\"\r\n              value={service.description}\r\n              onChange={(e) => updateService(index, 'description', e.target.value)}\r\n              placeholder=\"Interior and exterior painting.\"\r\n            />\r\n          </div>\r\n        </div>\r\n      ))}\r\n\r\n      <button\r\n        type=\"button\"\r\n        className=\"btn-add-service\"\r\n        onClick={addService}\r\n      >\r\n        + Add Another Service\r\n      </button>\r\n\r\n      <p className=\"step-footer-text\">\r\n        Don't worry about being perfect — you can update these anytime.\r\n      </p>\r\n\r\n      <div className=\"step-buttons\">\r\n        <button className=\"btn-secondary\" onClick={onPrev}>← Back</button>\r\n        <button className=\"btn-primary\" onClick={handleNext}>Continue →</button>\r\n      </div>\r\n    </div>\r\n  );\r\n}\r\n\r\nexport default Step4;\r\n\r\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/simplyforms/src/components/FormSteps/Step4.js b/simplyforms/src/components/FormSteps/Step4.js
+--- a/simplyforms/src/components/FormSteps/Step4.js	(revision 74907eac3744a1508a231fae3dfdc3bfb597e1d0)
++++ b/simplyforms/src/components/FormSteps/Step4.js	(date 1765184893567)
+@@ -2,20 +2,32 @@
+ import './FormStep.css';
+ 
+ function Step4({ formData, updateFormData, onNext, onPrev }) {
++  // Ensure services array is always initialized
++  const services = Array.isArray(formData.services) && formData.services.length > 0 
++    ? formData.services 
++    : [{ name: '', description: '' }];
++
+   const addService = () => {
+-    const newServices = [...formData.services, { name: '', description: '' }];
++    const currentServices = Array.isArray(formData.services) ? formData.services : [];
++    const newServices = [...currentServices, { name: '', description: '' }];
+     updateFormData({ services: newServices });
+   };
+ 
+   const removeService = (index) => {
+-    const newServices = formData.services.filter((_, i) => i !== index);
+-    updateFormData({ services: newServices });
++    const currentServices = Array.isArray(formData.services) ? formData.services : [];
++    if (currentServices.length > 1) {
++      const newServices = currentServices.filter((_, i) => i !== index);
++      updateFormData({ services: newServices });
++    }
+   };
+ 
+   const updateService = (index, field, value) => {
+-    const newServices = [...formData.services];
+-    newServices[index][field] = value;
+-    updateFormData({ services: newServices });
++    const currentServices = Array.isArray(formData.services) ? formData.services : [];
++    const newServices = [...currentServices];
++    if (newServices[index]) {
++      newServices[index] = { ...newServices[index], [field]: value };
++      updateFormData({ services: newServices });
++    }
+   };
+ 
+   const handleNext = () => {
+@@ -29,11 +41,11 @@
+         List your main products or services. We'll turn this into clean website sections for you.
+       </p>
+ 
+-      {formData.services.map((service, index) => (
++      {services.map((service, index) => (
+         <div key={index} className="service-block">
+           <div className="service-header">
+             <h3>Service/Product {index + 1}</h3>
+-            {formData.services.length > 1 && (
++            {services.length > 1 && (
+               <button
+                 type="button"
+                 className="btn-remove"
+@@ -48,7 +60,7 @@
+             <label>Service/Product Name</label>
+             <input
+               type="text"
+-              value={service.name}
++              value={service.name || ''}
+               onChange={(e) => updateService(index, 'name', e.target.value)}
+               placeholder="House Painting"
+             />
+@@ -58,7 +70,7 @@
+             <label>One-line description</label>
+             <input
+               type="text"
+-              value={service.description}
++              value={service.description || ''}
+               onChange={(e) => updateService(index, 'description', e.target.value)}
+               placeholder="Interior and exterior painting."
+             />
+Index: simplyforms/src/components/FormSteps/Step3.js
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>import React, { useState, useEffect } from 'react';\r\nimport { getOpeningDays } from '../../services/api';\r\nimport './FormStep.css';\r\n\r\nfunction Step3({ formData, updateFormData, onNext, onPrev }) {\r\n  const [openingDays, setOpeningDays] = useState([]);\r\n  const [showCustomHours, setShowCustomHours] = useState(false);\r\n\r\n  useEffect(() => {\r\n    getOpeningDays()\r\n      .then(res => {\r\n        const data = res.data;\r\n        if (Array.isArray(data)) {\r\n          setOpeningDays(data);\r\n        } else if (data && Array.isArray(data.data)) {\r\n          setOpeningDays(data.data);\r\n        } else if (data && Array.isArray(data.content)) {\r\n          setOpeningDays(data.content);\r\n        } else {\r\n          console.warn('Unexpected opening days response format:', data);\r\n          setOpeningDays([]);\r\n        }\r\n      })\r\n      .catch(err => {\r\n        console.error('Error fetching opening days:', err);\r\n        setOpeningDays([]);\r\n      });\r\n  }, []);\r\n\r\n  const handleChange = (e) => {\r\n    const value = e.target.value;\r\n    updateFormData({ [e.target.name]: value });\r\n    \r\n    if (e.target.name === 'openingDaysId') {\r\n      const selected = openingDays.find(od => od.id === parseInt(value));\r\n      setShowCustomHours(selected && selected.openingDays === 'Custom hours');\r\n    }\r\n  };\r\n\r\n  const handleNext = () => {\r\n    if (formData.businessPhone && formData.businessEmail) {\r\n      onNext();\r\n    } else {\r\n      alert('Please fill in business phone and email');\r\n    }\r\n  };\r\n\r\n  return (\r\n    <div className=\"form-step\">\r\n      <h2 className=\"step-header\">How can customers reach you?</h2>\r\n\r\n      <div className=\"form-group\">\r\n        <label>Business Phone Number *</label>\r\n        <input\r\n          type=\"text\"\r\n          name=\"businessPhone\"\r\n          value={formData.businessPhone}\r\n          onChange={handleChange}\r\n          placeholder=\"+264 61 123 4567\"\r\n          required\r\n        />\r\n      </div>\r\n\r\n      <div className=\"form-group\">\r\n        <label>Business Email Address *</label>\r\n        <input\r\n          type=\"email\"\r\n          name=\"businessEmail\"\r\n          value={formData.businessEmail}\r\n          onChange={handleChange}\r\n          placeholder=\"info@example.com\"\r\n          required\r\n        />\r\n      </div>\r\n\r\n      <div className=\"form-group\">\r\n        <label>Operating Hours</label>\r\n        <select\r\n          name=\"openingDaysId\"\r\n          value={formData.openingDaysId}\r\n          onChange={handleChange}\r\n        >\r\n          <option value=\"\">Select Opening Days</option>\r\n          {Array.isArray(openingDays) && openingDays.length > 0 ? (\r\n            openingDays.map(day => (\r\n              <option key={day.id} value={day.id}>\r\n                {day.openingDays}\r\n              </option>\r\n            ))\r\n          ) : (\r\n            <option value=\"\" disabled>Loading opening days...</option>\r\n          )}\r\n        </select>\r\n      </div>\r\n\r\n      {showCustomHours && (\r\n        <div className=\"form-group\">\r\n          <label>Custom Hours</label>\r\n          <input\r\n            type=\"text\"\r\n            name=\"customHours\"\r\n            value={formData.customHours}\r\n            onChange={handleChange}\r\n            placeholder=\"9:00 AM - 5:00 PM\"\r\n          />\r\n        </div>\r\n      )}\r\n\r\n      <p className=\"step-footer-text\">You're doing great — almost halfway!</p>\r\n\r\n      <div className=\"step-buttons\">\r\n        <button className=\"btn-secondary\" onClick={onPrev}>← Back</button>\r\n        <button className=\"btn-primary\" onClick={handleNext}>Continue →</button>\r\n      </div>\r\n    </div>\r\n  );\r\n}\r\n\r\nexport default Step3;\r\n\r\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/simplyforms/src/components/FormSteps/Step3.js b/simplyforms/src/components/FormSteps/Step3.js
+--- a/simplyforms/src/components/FormSteps/Step3.js	(revision 74907eac3744a1508a231fae3dfdc3bfb597e1d0)
++++ b/simplyforms/src/components/FormSteps/Step3.js	(date 1765184893567)
+@@ -32,7 +32,7 @@
+     updateFormData({ [e.target.name]: value });
+     
+     if (e.target.name === 'openingDaysId') {
+-      const selected = openingDays.find(od => od.id === parseInt(value));
++      const selected = Array.isArray(openingDays) ? openingDays.find(od => od.id === parseInt(value)) : null;
+       setShowCustomHours(selected && selected.openingDays === 'Custom hours');
+     }
+   };
+@@ -54,7 +54,7 @@
+         <input
+           type="text"
+           name="businessPhone"
+-          value={formData.businessPhone}
++          value={formData.businessPhone || ''}
+           onChange={handleChange}
+           placeholder="+264 61 123 4567"
+           required
+@@ -66,7 +66,7 @@
+         <input
+           type="email"
+           name="businessEmail"
+-          value={formData.businessEmail}
++          value={formData.businessEmail || ''}
+           onChange={handleChange}
+           placeholder="info@example.com"
+           required
+@@ -99,7 +99,7 @@
+           <input
+             type="text"
+             name="customHours"
+-            value={formData.customHours}
++            value={formData.customHours || ''}
+             onChange={handleChange}
+             placeholder="9:00 AM - 5:00 PM"
+           />
+Index: simplyforms/src/components/FormSteps/Step2.js
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>import React, { useState, useEffect } from 'react';\r\nimport { getIndustries } from '../../services/api';\r\nimport './FormStep.css';\r\n\r\nfunction Step2({ formData, updateFormData, onNext, onPrev }) {\r\n  const [industries, setIndustries] = useState([]);\r\n  const [logoPreview, setLogoPreview] = useState(null);\r\n\r\n  useEffect(() => {\r\n    getIndustries()\r\n      .then(res => {\r\n        // Handle different response structures\r\n        const data = res.data;\r\n        // If data is an array, use it directly\r\n        // If data is an object with a data property, use that\r\n        // Otherwise, default to empty array\r\n        if (Array.isArray(data)) {\r\n          setIndustries(data);\r\n        } else if (data && Array.isArray(data.data)) {\r\n          setIndustries(data.data);\r\n        } else if (data && Array.isArray(data.content)) {\r\n          setIndustries(data.content);\r\n        } else {\r\n          console.warn('Unexpected industries response format:', data);\r\n          setIndustries([]);\r\n        }\r\n      })\r\n      .catch(err => {\r\n        console.error('Error fetching industries:', err);\r\n        setIndustries([]); // Set empty array on error\r\n      });\r\n  }, []);\r\n\r\n  const handleChange = (e) => {\r\n    updateFormData({ [e.target.name]: e.target.value });\r\n  };\r\n\r\n  const handleLogoChange = (e) => {\r\n    const file = e.target.files[0];\r\n    if (file) {\r\n      updateFormData({ logoFile: file });\r\n      const reader = new FileReader();\r\n      reader.onloadend = () => {\r\n        setLogoPreview(reader.result);\r\n      };\r\n      reader.readAsDataURL(file);\r\n    }\r\n  };\r\n\r\n  const handleNext = () => {\r\n    if (formData.aboutInformation) {\r\n      onNext();\r\n    } else {\r\n      alert('Please fill in what your business does');\r\n    }\r\n  };\r\n\r\n  return (\r\n    <div className=\"form-step\">\r\n      <h2 className=\"step-header\">Tell us about your business</h2>\r\n      <p className=\"step-subtext\">\r\n        This helps us shape the tone and focus of your website.\r\n      </p>\r\n\r\n      <div className=\"form-group\">\r\n        <label>What does your business do? *</label>\r\n        <input\r\n          type=\"text\"\r\n          name=\"aboutInformation\"\r\n          value={formData.aboutInformation}\r\n          onChange={handleChange}\r\n          placeholder=\"Example: We provide plumbing services in Windhoek.\"\r\n          required\r\n        />\r\n      </div>\r\n\r\n      <div className=\"form-group\">\r\n        <label>Industry</label>\r\n        <select\r\n          name=\"industryId\"\r\n          value={formData.industryId || ''}\r\n          onChange={handleChange}\r\n        >\r\n          <option value=\"\">Select Industry</option>\r\n          {Array.isArray(industries) && industries.length > 0 ? (\r\n            industries.map(industry => (\r\n              <option key={industry.id} value={industry.id}>\r\n                {industry.industry || industry.name || 'Unknown'}\r\n              </option>\r\n            ))\r\n          ) : (\r\n            <option value=\"\" disabled>Loading industries...</option>\r\n          )}\r\n        </select>\r\n      </div>\r\n\r\n      <div className=\"form-group\">\r\n        <label>Upload your logo</label>\r\n        <div className=\"file-upload-area\">\r\n          <input\r\n            type=\"file\"\r\n            id=\"logo-upload\"\r\n            accept=\"image/*\"\r\n            onChange={handleLogoChange}\r\n            style={{ display: 'none' }}\r\n          />\r\n          <label htmlFor=\"logo-upload\" className=\"file-upload-label\">\r\n            {logoPreview ? (\r\n              <img src={logoPreview} alt=\"Logo preview\" className=\"logo-preview\" />\r\n            ) : (\r\n              <div className=\"file-upload-placeholder\">\r\n                <span>\uD83D\uDCCE</span>\r\n                <p>Click to upload logo</p>\r\n                <small>You can skip this.</small>\r\n              </div>\r\n            )}\r\n          </label>\r\n        </div>\r\n      </div>\r\n\r\n      <p className=\"step-footer-text\">\r\n        All information shared in this process can be revised or changed before going live.\r\n      </p>\r\n\r\n      <div className=\"step-buttons\">\r\n        <button className=\"btn-secondary\" onClick={onPrev}>← Back</button>\r\n        <button className=\"btn-primary\" onClick={handleNext}>Continue →</button>\r\n      </div>\r\n    </div>\r\n  );\r\n}\r\n\r\nexport default Step2;\r\n\r\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/simplyforms/src/components/FormSteps/Step2.js b/simplyforms/src/components/FormSteps/Step2.js
+--- a/simplyforms/src/components/FormSteps/Step2.js	(revision 74907eac3744a1508a231fae3dfdc3bfb597e1d0)
++++ b/simplyforms/src/components/FormSteps/Step2.js	(date 1765184893567)
+@@ -67,7 +67,7 @@
+         <input
+           type="text"
+           name="aboutInformation"
+-          value={formData.aboutInformation}
++          value={formData.aboutInformation || ''}
+           onChange={handleChange}
+           placeholder="Example: We provide plumbing services in Windhoek."
+           required
+Index: simplyforms/src/components/FormSteps/Step7.js
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>import React from 'react';\r\nimport './FormStep.css';\r\n\r\nfunction Step7({ formData, updateFormData, onSubmit, onPrev }) {\r\n  const ctaOptions = ['Call Now', 'WhatsApp Us', 'Get a Quote', 'Book an Appointment', 'Shop Online'];\r\n\r\n  const handleChange = (e) => {\r\n    updateFormData({ [e.target.name]: e.target.value });\r\n  };\r\n\r\n  const getPlaceholder = () => {\r\n    if (formData.primaryCta === 'Call Now' || formData.primaryCta === 'WhatsApp Us') {\r\n      return '+264 61 123 4567';\r\n    } else if (formData.primaryCta === 'Get a Quote' || formData.primaryCta === 'Book an Appointment') {\r\n      return 'https://example.com/quote';\r\n    } else {\r\n      return 'https://example.com/shop';\r\n    }\r\n  };\r\n\r\n  return (\r\n    <div className=\"form-step\">\r\n      <h2 className=\"step-header\">Choose the main action you want customers to take</h2>\r\n\r\n      <div className=\"form-group\">\r\n        <label>Primary Call-to-Action *</label>\r\n        <select\r\n          name=\"primaryCta\"\r\n          value={formData.primaryCta}\r\n          onChange={handleChange}\r\n          required\r\n        >\r\n          {ctaOptions.map(option => (\r\n            <option key={option} value={option}>{option}</option>\r\n          ))}\r\n        </select>\r\n      </div>\r\n\r\n      <div className=\"form-group\">\r\n        <label>CTA Link or Phone Number *</label>\r\n        <input\r\n          type=\"text\"\r\n          name=\"ctaLinkOrPhone\"\r\n          value={formData.ctaLinkOrPhone}\r\n          onChange={handleChange}\r\n          placeholder={getPlaceholder()}\r\n          required\r\n        />\r\n      </div>\r\n\r\n      <div className=\"form-group\">\r\n        <label>Secondary Action (Optional)</label>\r\n        <input\r\n          type=\"text\"\r\n          name=\"secondaryAction\"\r\n          value={formData.secondaryAction}\r\n          onChange={handleChange}\r\n          placeholder=\"Get a Quote\"\r\n        />\r\n      </div>\r\n\r\n      <p className=\"step-footer-text\">Final step — you're almost done!</p>\r\n\r\n      <p className=\"privacy-notice\">\r\n        Your information is kept private and protected under our Privacy Policy.\r\n      </p>\r\n\r\n      <div className=\"step-buttons\">\r\n        <button className=\"btn-secondary\" onClick={onPrev}>← Back</button>\r\n        <button className=\"btn-primary btn-submit\" onClick={onSubmit}>\r\n          Submit & Generate Website Draft →\r\n        </button>\r\n      </div>\r\n    </div>\r\n  );\r\n}\r\n\r\nexport default Step7;\r\n\r\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/simplyforms/src/components/FormSteps/Step7.js b/simplyforms/src/components/FormSteps/Step7.js
+--- a/simplyforms/src/components/FormSteps/Step7.js	(revision 74907eac3744a1508a231fae3dfdc3bfb597e1d0)
++++ b/simplyforms/src/components/FormSteps/Step7.js	(date 1765184893582)
+@@ -26,7 +26,7 @@
+         <label>Primary Call-to-Action *</label>
+         <select
+           name="primaryCta"
+-          value={formData.primaryCta}
++          value={formData.primaryCta || 'Call Now'}
+           onChange={handleChange}
+           required
+         >
+@@ -41,7 +41,7 @@
+         <input
+           type="text"
+           name="ctaLinkOrPhone"
+-          value={formData.ctaLinkOrPhone}
++          value={formData.ctaLinkOrPhone || ''}
+           onChange={handleChange}
+           placeholder={getPlaceholder()}
+           required
+@@ -53,7 +53,7 @@
+         <input
+           type="text"
+           name="secondaryAction"
+-          value={formData.secondaryAction}
++          value={formData.secondaryAction || ''}
+           onChange={handleChange}
+           placeholder="Get a Quote"
+         />
+Index: simplyforms/setupProxy.js
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>const { createProxyMiddleware } = require('http-proxy-middleware');\r\n\r\nmodule.exports = function(app) {\r\n  app.use(\r\n    '/api',\r\n    createProxyMiddleware({\r\n      target: 'https://formapi.simplyfound.com.na',\r\n      changeOrigin: true,\r\n      secure: true,\r\n      logLevel: 'debug',\r\n    })\r\n  );\r\n};\r\n\r\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/simplyforms/setupProxy.js b/simplyforms/setupProxy.js
+--- a/simplyforms/setupProxy.js	(revision 74907eac3744a1508a231fae3dfdc3bfb597e1d0)
++++ b/simplyforms/setupProxy.js	(date 1765184893605)
+@@ -4,7 +4,7 @@
+   app.use(
+     '/api',
+     createProxyMiddleware({
+-      target: 'https://formapi.simplyfound.com.na',
++      target: 'https://clientapi.simplyfound.com.na',
+       changeOrigin: true,
+       secure: true,
+       logLevel: 'debug',
+Index: simplyforms/src/components/FormSteps/Step5.js
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>import React, { useState, useEffect } from 'react';\r\nimport { getColorPalettes, getLayoutStyles } from '../../services/api';\r\nimport './FormStep.css';\r\n\r\nfunction Step5({ formData, updateFormData, onNext, onPrev }) {\r\n  const [colorPalettes, setColorPalettes] = useState([]);\r\n  const [layoutStyles, setLayoutStyles] = useState([]);\r\n  const [imagePreviews, setImagePreviews] = useState([]);\r\n\r\n  useEffect(() => {\r\n    const fetchData = async () => {\r\n      try {\r\n        const palettesRes = await getColorPalettes();\r\n        const palettesData = palettesRes.data;\r\n        if (Array.isArray(palettesData)) {\r\n          setColorPalettes(palettesData);\r\n        } else if (palettesData && Array.isArray(palettesData.data)) {\r\n          setColorPalettes(palettesData.data);\r\n        } else if (palettesData && Array.isArray(palettesData.content)) {\r\n          setColorPalettes(palettesData.content);\r\n        } else {\r\n          console.warn('Unexpected color palettes response format:', palettesData);\r\n          setColorPalettes([]);\r\n        }\r\n      } catch (err) {\r\n        console.error('Error fetching color palettes:', err);\r\n        setColorPalettes([]);\r\n      }\r\n      \r\n      try {\r\n        const stylesRes = await getLayoutStyles();\r\n        const stylesData = stylesRes.data;\r\n        if (Array.isArray(stylesData)) {\r\n          setLayoutStyles(stylesData);\r\n        } else if (stylesData && Array.isArray(stylesData.data)) {\r\n          setLayoutStyles(stylesData.data);\r\n        } else if (stylesData && Array.isArray(stylesData.content)) {\r\n          setLayoutStyles(stylesData.content);\r\n        } else {\r\n          console.warn('Unexpected layout styles response format:', stylesData);\r\n          setLayoutStyles([]);\r\n        }\r\n      } catch (err) {\r\n        console.error('Error fetching layout styles:', err);\r\n        setLayoutStyles([]);\r\n      }\r\n    };\r\n    \r\n    fetchData();\r\n  }, []);\r\n\r\n  const handleImageChange = (e) => {\r\n    const files = Array.from(e.target.files).slice(0, 10);\r\n    updateFormData({ imageFiles: files });\r\n    \r\n    const previews = files.map(file => URL.createObjectURL(file));\r\n    setImagePreviews(previews);\r\n  };\r\n\r\n  const handleNext = () => {\r\n    onNext();\r\n  };\r\n\r\n  return (\r\n    <div className=\"form-step\">\r\n      <h2 className=\"step-header\">Choose your website's look</h2>\r\n      <p className=\"step-subtext\">\r\n        These presets help us design your site quickly.\r\n      </p>\r\n\r\n      <div className=\"form-section\">\r\n        <h3>A. Colour Palette</h3>\r\n        <p className=\"section-hint\">Click on a color palette box below to select it for your website</p>\r\n        {colorPalettes.length === 0 ? (\r\n          <div className=\"loading-container\">\r\n            <p className=\"loading-text\">Loading color palettes...</p>\r\n            <p className=\"loading-hint\">If no palettes appear, please add color palettes in the admin panel first.</p>\r\n          </div>\r\n        ) : (\r\n          <>\r\n            <div className=\"color-palette-grid\">\r\n              {colorPalettes.map(palette => (\r\n                <div\r\n                  key={palette.id}\r\n                  className={`color-palette-card ${formData.colorPaletteId == palette.id ? 'selected' : ''}`}\r\n                  onClick={() => {\r\n                    console.log('Selected palette:', palette.id, palette.name);\r\n                    updateFormData({ colorPaletteId: palette.id });\r\n                  }}\r\n                  title={palette.description || palette.name}\r\n                >\r\n                  <div className=\"color-swatches\">\r\n                    <div \r\n                      className=\"swatch\" \r\n                      style={{ backgroundColor: palette.color1 || '#cccccc' }} \r\n                      title={palette.color1 || 'Color 1'}\r\n                    ></div>\r\n                    <div \r\n                      className=\"swatch\" \r\n                      style={{ backgroundColor: palette.color2 || '#cccccc' }} \r\n                      title={palette.color2 || 'Color 2'}\r\n                    ></div>\r\n                    <div \r\n                      className=\"swatch\" \r\n                      style={{ backgroundColor: palette.color3 || '#cccccc' }} \r\n                      title={palette.color3 || 'Color 3'}\r\n                    ></div>\r\n                    {palette.color4 && (\r\n                      <div \r\n                        className=\"swatch\" \r\n                        style={{ backgroundColor: palette.color4 }} \r\n                        title={palette.color4}\r\n                      ></div>\r\n                    )}\r\n                    {palette.color5 && (\r\n                      <div \r\n                        className=\"swatch\" \r\n                        style={{ backgroundColor: palette.color5 }} \r\n                        title={palette.color5}\r\n                      ></div>\r\n                    )}\r\n                  </div>\r\n                  <p className=\"palette-name\">{palette.name || 'Unnamed Palette'}</p>\r\n                  {palette.description && (\r\n                    <p className=\"palette-description\">{palette.description}</p>\r\n                  )}\r\n                  {formData.colorPaletteId == palette.id && (\r\n                    <div className=\"selected-indicator\">✓ Selected</div>\r\n                  )}\r\n                </div>\r\n              ))}\r\n            </div>\r\n            {formData.colorPaletteId && (\r\n              <p className=\"selection-feedback\">\r\n                ✓ You have selected a color palette. You can change your selection by clicking another palette.\r\n              </p>\r\n            )}\r\n          </>\r\n        )}\r\n      </div>\r\n\r\n      <div className=\"form-section\">\r\n        <h3>B. Layout Style</h3>\r\n        <div className=\"layout-style-grid\">\r\n          {layoutStyles.map(style => (\r\n            <div\r\n              key={style.id}\r\n              className={`layout-style-card ${formData.layoutStyleId == style.id ? 'selected' : ''}`}\r\n              onClick={() => updateFormData({ layoutStyleId: style.id })}\r\n            >\r\n              <h4>{style.style}</h4>\r\n            </div>\r\n          ))}\r\n        </div>\r\n      </div>\r\n\r\n      <div className=\"form-section\">\r\n        <h3>C. Optional Image Uploads</h3>\r\n        <div className=\"file-upload-area\">\r\n          <input\r\n            type=\"file\"\r\n            id=\"images-upload\"\r\n            accept=\"image/*\"\r\n            multiple\r\n            onChange={handleImageChange}\r\n            style={{ display: 'none' }}\r\n          />\r\n          <label htmlFor=\"images-upload\" className=\"file-upload-label\">\r\n            <div className=\"file-upload-placeholder\">\r\n              <span>\uD83D\uDCF7</span>\r\n              <p>Upload Photos (drag & drop)</p>\r\n              <small>Add up to 10 photos (optional).</small>\r\n            </div>\r\n          </label>\r\n        </div>\r\n        \r\n        {imagePreviews.length > 0 && (\r\n          <div className=\"image-previews\">\r\n            {imagePreviews.map((preview, index) => (\r\n              <div key={index} className=\"image-preview\">\r\n                <img src={preview} alt={`Preview ${index + 1}`} />\r\n              </div>\r\n            ))}\r\n          </div>\r\n        )}\r\n      </div>\r\n\r\n      <p className=\"step-footer-text\">You're nearly done!</p>\r\n\r\n      <div className=\"step-buttons\">\r\n        <button className=\"btn-secondary\" onClick={onPrev}>← Back</button>\r\n        <button className=\"btn-primary\" onClick={handleNext}>Continue →</button>\r\n      </div>\r\n    </div>\r\n  );\r\n}\r\n\r\nexport default Step5;\r\n\r\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/simplyforms/src/components/FormSteps/Step5.js b/simplyforms/src/components/FormSteps/Step5.js
+--- a/simplyforms/src/components/FormSteps/Step5.js	(revision 74907eac3744a1508a231fae3dfdc3bfb597e1d0)
++++ b/simplyforms/src/components/FormSteps/Step5.js	(date 1765187546678)
+@@ -1,32 +1,118 @@
+ import React, { useState, useEffect } from 'react';
+-import { getColorPalettes, getLayoutStyles } from '../../services/api';
++import { getLayoutStyles } from '../../services/api';
+ import './FormStep.css';
+ 
++// Pre-defined color palettes - always available in the form
++const PREDEFINED_COLOR_PALETTES = [
++  {
++    id: 1,
++    name: 'Professional Blue',
++    description: 'Trustworthy and professional',
++    color1: '#1e3a8a',
++    color2: '#3b82f6',
++    color3: '#60a5fa',
++    color4: '#93c5fd',
++    color5: '#dbeafe'
++  },
++  {
++    id: 2,
++    name: 'Nature Green',
++    description: 'Fresh and natural',
++    color1: '#14532d',
++    color2: '#16a34a',
++    color3: '#4ade80',
++    color4: '#86efac',
++    color5: '#dcfce7'
++  },
++  {
++    id: 3,
++    name: 'Warm Orange',
++    description: 'Energetic and friendly',
++    color1: '#9a3412',
++    color2: '#ea580c',
++    color3: '#fb923c',
++    color4: '#fdba74',
++    color5: '#fed7aa'
++  },
++  {
++    id: 4,
++    name: 'Elegant Purple',
++    description: 'Creative and sophisticated',
++    color1: '#581c87',
++    color2: '#9333ea',
++    color3: '#a855f7',
++    color4: '#c084fc',
++    color5: '#e9d5ff'
++  },
++  {
++    id: 5,
++    name: 'Classic Red',
++    description: 'Bold and confident',
++    color1: '#991b1b',
++    color2: '#dc2626',
++    color3: '#ef4444',
++    color4: '#f87171',
++    color5: '#fecaca'
++  },
++  {
++    id: 6,
++    name: 'Sunset Pink',
++    description: 'Modern and vibrant',
++    color1: '#9f1239',
++    color2: '#e11d48',
++    color3: '#f43f5e',
++    color4: '#fb7185',
++    color5: '#fce7f3'
++  },
++  {
++    id: 7,
++    name: 'Ocean Teal',
++    description: 'Calm and refreshing',
++    color1: '#134e4a',
++    color2: '#14b8a6',
++    color3: '#2dd4bf',
++    color4: '#5eead4',
++    color5: '#ccfbf1'
++  },
++  {
++    id: 8,
++    name: 'Neutral Gray',
++    description: 'Minimalist and professional',
++    color1: '#1f2937',
++    color2: '#4b5563',
++    color3: '#6b7280',
++    color4: '#9ca3af',
++    color5: '#f3f4f6'
++  },
++  {
++    id: 9,
++    name: 'Golden Yellow',
++    description: 'Optimistic and bright',
++    color1: '#854d0e',
++    color2: '#eab308',
++    color3: '#facc15',
++    color4: '#fde047',
++    color5: '#fef9c3'
++  },
++  {
++    id: 10,
++    name: 'Royal Navy',
++    description: 'Strong and reliable',
++    color1: '#1e293b',
++    color2: '#334155',
++    color3: '#475569',
++    color4: '#64748b',
++    color5: '#cbd5e1'
++  }
++];
++
+ function Step5({ formData, updateFormData, onNext, onPrev }) {
+-  const [colorPalettes, setColorPalettes] = useState([]);
++  const [colorPalettes] = useState(PREDEFINED_COLOR_PALETTES);
+   const [layoutStyles, setLayoutStyles] = useState([]);
+   const [imagePreviews, setImagePreviews] = useState([]);
+ 
+   useEffect(() => {
+     const fetchData = async () => {
+-      try {
+-        const palettesRes = await getColorPalettes();
+-        const palettesData = palettesRes.data;
+-        if (Array.isArray(palettesData)) {
+-          setColorPalettes(palettesData);
+-        } else if (palettesData && Array.isArray(palettesData.data)) {
+-          setColorPalettes(palettesData.data);
+-        } else if (palettesData && Array.isArray(palettesData.content)) {
+-          setColorPalettes(palettesData.content);
+-        } else {
+-          console.warn('Unexpected color palettes response format:', palettesData);
+-          setColorPalettes([]);
+-        }
+-      } catch (err) {
+-        console.error('Error fetching color palettes:', err);
+-        setColorPalettes([]);
+-      }
+-      
+       try {
+         const stylesRes = await getLayoutStyles();
+         const stylesData = stylesRes.data;
+@@ -71,15 +157,8 @@
+       <div className="form-section">
+         <h3>A. Colour Palette</h3>
+         <p className="section-hint">Click on a color palette box below to select it for your website</p>
+-        {colorPalettes.length === 0 ? (
+-          <div className="loading-container">
+-            <p className="loading-text">Loading color palettes...</p>
+-            <p className="loading-hint">If no palettes appear, please add color palettes in the admin panel first.</p>
+-          </div>
+-        ) : (
+-          <>
+-            <div className="color-palette-grid">
+-              {colorPalettes.map(palette => (
++        <div className="color-palette-grid">
++          {colorPalettes.map(palette => (
+                 <div
+                   key={palette.id}
+                   className={`color-palette-card ${formData.colorPaletteId == palette.id ? 'selected' : ''}`}
+@@ -128,21 +207,19 @@
+                     <div className="selected-indicator">✓ Selected</div>
+                   )}
+                 </div>
+-              ))}
+-            </div>
+-            {formData.colorPaletteId && (
+-              <p className="selection-feedback">
+-                ✓ You have selected a color palette. You can change your selection by clicking another palette.
+-              </p>
+-            )}
+-          </>
++          ))}
++        </div>
++        {formData.colorPaletteId && (
++          <p className="selection-feedback">
++            ✓ You have selected a color palette. You can change your selection by clicking another palette.
++          </p>
+         )}
+       </div>
+ 
+       <div className="form-section">
+         <h3>B. Layout Style</h3>
+-        <div className="layout-style-grid">
+-          {layoutStyles.map(style => (
++            <div className="layout-style-grid">
++              {Array.isArray(layoutStyles) && layoutStyles.map(style => (
+             <div
+               key={style.id}
+               className={`layout-style-card ${formData.layoutStyleId == style.id ? 'selected' : ''}`}
+Index: simplyforms/src/components/Admin/FormsManagement.js
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>import React, { useState, useEffect } from 'react';\r\nimport { getClientJourneys, downloadPromptPdf, downloadLogo, downloadImage } from '../../services/api';\r\nimport './FormsManagement.css';\r\n\r\nfunction FormsManagement() {\r\n  const [forms, setForms] = useState([]);\r\n  const [loading, setLoading] = useState(true);\r\n  const [error, setError] = useState(null);\r\n\r\n  useEffect(() => {\r\n    loadForms();\r\n  }, []);\r\n\r\n  const loadForms = async (retryCount = 0) => {\r\n    setLoading(true);\r\n    setError(null);\r\n    try {\r\n      const response = await getClientJourneys();\r\n      console.log('Forms response:', response);\r\n      console.log('Forms data:', response.data);\r\n      \r\n      const formsData = response.data || [];\r\n      console.log('Setting forms:', formsData);\r\n      setForms(formsData);\r\n      setError(null);\r\n    } catch (error) {\r\n      console.error('Error loading forms:', error);\r\n      console.error('Error details:', {\r\n        message: error.message,\r\n        code: error.code,\r\n        response: error.response,\r\n        stack: error.stack\r\n      });\r\n      \r\n      // Retry logic for network errors\r\n      if (retryCount < 2 && (error.code === 'ERR_NETWORK' || error.message.includes('ERR_INCOMPLETE') || error.message.includes('chunked'))) {\r\n        console.log(`Retrying... Attempt ${retryCount + 1}`);\r\n        setTimeout(() => loadForms(retryCount + 1), 2000);\r\n        return;\r\n      }\r\n      \r\n      // Set error message\r\n      if (error.code === 'ERR_NETWORK' || error.message.includes('ERR_INCOMPLETE') || error.message.includes('chunked')) {\r\n        setError('Connection error. Please check your internet connection and try again.');\r\n      } else if (error.response) {\r\n        setError(`Server error: ${error.response.status} - ${error.response.statusText}. Check console for details.`);\r\n      } else {\r\n        setError('Error loading forms. Please try again. Check console for details.');\r\n      }\r\n      setForms([]);\r\n    } finally {\r\n      setLoading(false);\r\n    }\r\n  };\r\n\r\n  const handleDownloadPrompt = async (id) => {\r\n    try {\r\n      const response = await downloadPromptPdf(id);\r\n      const url = window.URL.createObjectURL(new Blob([response.data]));\r\n      const link = document.createElement('a');\r\n      link.href = url;\r\n      link.setAttribute('download', `website-prompt-${id}.pdf`);\r\n      document.body.appendChild(link);\r\n      link.click();\r\n      link.remove();\r\n    } catch (error) {\r\n      console.error('Error downloading prompt:', error);\r\n      alert('Error downloading prompt file');\r\n    }\r\n  };\r\n\r\n  const handleDownloadLogo = async (fileName) => {\r\n    if (!fileName) {\r\n      alert('No logo available');\r\n      return;\r\n    }\r\n    try {\r\n      const response = await downloadLogo(fileName);\r\n      const url = window.URL.createObjectURL(new Blob([response.data]));\r\n      const link = document.createElement('a');\r\n      link.href = url;\r\n      link.setAttribute('download', fileName);\r\n      document.body.appendChild(link);\r\n      link.click();\r\n      link.remove();\r\n    } catch (error) {\r\n      console.error('Error downloading logo:', error);\r\n      alert('Error downloading logo');\r\n    }\r\n  };\r\n\r\n  const handleDownloadImage = async (fileName) => {\r\n    try {\r\n      const response = await downloadImage(fileName);\r\n      const url = window.URL.createObjectURL(new Blob([response.data]));\r\n      const link = document.createElement('a');\r\n      link.href = url;\r\n      link.setAttribute('download', fileName);\r\n      document.body.appendChild(link);\r\n      link.click();\r\n      link.remove();\r\n    } catch (error) {\r\n      console.error('Error downloading image:', error);\r\n      alert('Error downloading image');\r\n    }\r\n  };\r\n\r\n\r\n  return (\r\n    <div className=\"forms-management\">\r\n      <div className=\"page-header\">\r\n        <div>\r\n          <h1>Form Submissions</h1>\r\n          <p>View and manage all submitted forms</p>\r\n        </div>\r\n        <button className=\"btn-refresh\" onClick={() => loadForms()} title=\"Refresh\">\r\n          \uD83D\uDD04 Refresh\r\n        </button>\r\n      </div>\r\n\r\n      {error && (\r\n        <div className=\"error-banner\">\r\n          <p>{error}</p>\r\n          <button onClick={() => loadForms()}>Try Again</button>\r\n        </div>\r\n      )}\r\n\r\n      {loading && !error ? (\r\n        <div className=\"loading\">Loading forms...</div>\r\n      ) : forms.length === 0 && !error ? (\r\n        <div className=\"empty-state\">\r\n          <p>No forms submitted yet.</p>\r\n          <p style={{ fontSize: '12px', color: '#999', marginTop: '10px' }}>\r\n            Forms will appear here once clients submit the form.\r\n          </p>\r\n        </div>\r\n      ) : (\r\n        <div className=\"forms-grid\">\r\n          {forms.map((form, index) => (\r\n            <div key={form.id || index} className=\"form-card\">\r\n              <div className=\"form-card-header\">\r\n                <h3>{form.companyName}</h3>\r\n                <span className=\"form-date\">\r\n                  {new Date(form.createdAt).toLocaleDateString()}\r\n                </span>\r\n              </div>\r\n\r\n              <div className=\"form-card-body\">\r\n                <p><strong>Client:</strong> {form.fullName || 'N/A'}</p>\r\n                <p><strong>Email:</strong> {form.email || 'N/A'}</p>\r\n                <p><strong>Location:</strong> {form.businessLocation || 'N/A'}</p>\r\n                {form.industry && (\r\n                  <p><strong>Industry:</strong> {form.industry.industry || 'N/A'}</p>\r\n                )}\r\n                {form.servicesOrProducts && Array.isArray(form.servicesOrProducts) && form.servicesOrProducts.length > 0 && (\r\n                  <p><strong>Services/Products:</strong> {form.servicesOrProducts.length}</p>\r\n                )}\r\n                {form.optionalImages && Array.isArray(form.optionalImages) && form.optionalImages.length > 0 && (\r\n                  <p><strong>Images:</strong> {form.optionalImages.length}</p>\r\n                )}\r\n                {form.colorPalette && (\r\n                  <p><strong>Color Palette:</strong> {form.colorPalette.name || 'N/A'}</p>\r\n                )}\r\n              </div>\r\n\r\n              <div className=\"form-card-actions\">\r\n                <button\r\n                  className=\"btn-download btn-primary\"\r\n                  onClick={() => handleDownloadPrompt(form.id)}\r\n                >\r\n                  \uD83D\uDCC4 Download Prompt PDF\r\n                </button>\r\n                \r\n                {form.logoFileName && (\r\n                  <button\r\n                    className=\"btn-download btn-secondary\"\r\n                    onClick={() => handleDownloadLogo(form.logoFileName)}\r\n                  >\r\n                    \uD83D\uDDBC\uFE0F Download Logo\r\n                  </button>\r\n                )}\r\n\r\n                {form.optionalImages && Array.isArray(form.optionalImages) && form.optionalImages.length > 0 && (\r\n                  <div className=\"images-section\">\r\n                    <p className=\"images-label\">Download Images:</p>\r\n                    <div className=\"images-list\">\r\n                      {form.optionalImages.map((image, index) => (\r\n                        <button\r\n                          key={image.id || index}\r\n                          className=\"btn-download btn-image\"\r\n                          onClick={() => handleDownloadImage(image.fileName)}\r\n                        >\r\n                          Image {index + 1}\r\n                        </button>\r\n                      ))}\r\n                    </div>\r\n                  </div>\r\n                )}\r\n              </div>\r\n            </div>\r\n          ))}\r\n        </div>\r\n      )}\r\n    </div>\r\n  );\r\n}\r\n\r\nexport default FormsManagement;\r\n\r\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/simplyforms/src/components/Admin/FormsManagement.js b/simplyforms/src/components/Admin/FormsManagement.js
+--- a/simplyforms/src/components/Admin/FormsManagement.js	(revision 74907eac3744a1508a231fae3dfdc3bfb597e1d0)
++++ b/simplyforms/src/components/Admin/FormsManagement.js	(date 1765184893582)
+@@ -19,7 +19,18 @@
+       console.log('Forms response:', response);
+       console.log('Forms data:', response.data);
+       
+-      const formsData = response.data || [];
++      let formsData = response.data || [];
++      // Handle different response structures
++      if (!Array.isArray(formsData)) {
++        if (formsData && Array.isArray(formsData.data)) {
++          formsData = formsData.data;
++        } else if (formsData && Array.isArray(formsData.content)) {
++          formsData = formsData.content;
++        } else {
++          console.warn('Unexpected forms response format:', formsData);
++          formsData = [];
++        }
++      }
+       console.log('Setting forms:', formsData);
+       setForms(formsData);
+       setError(null);
+@@ -141,7 +152,7 @@
+               <div className="form-card-header">
+                 <h3>{form.companyName}</h3>
+                 <span className="form-date">
+-                  {new Date(form.createdAt).toLocaleDateString()}
++                  {form.createdAt ? new Date(form.createdAt).toLocaleDateString() : 'N/A'}
+                 </span>
+               </div>
+ 
+Index: simplyforms/src/services/api.js
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>import axios from 'axios';\r\n\r\nconst API_BASE_URL = 'https://formapi.simplyfound.com.na/api';\r\n\r\nconst api = axios.create({\r\n  baseURL: API_BASE_URL,\r\n  headers: {\r\n    'Content-Type': 'application/json',\r\n  },\r\n  timeout: 60000, // 60 seconds timeout\r\n  timeoutErrorMessage: 'Request timeout. Please try again.',\r\n});\r\n\r\n// Reference Data APIs\r\nexport const getIndustries = () => api.get('/industries');\r\nexport const getColorPalettes = () => api.get('/color-palettes/picker');\r\nexport const getLayoutStyles = () => api.get('/layout-styles');\r\nexport const getOpeningDays = () => api.get('/opening-days');\r\nexport const getOpeningHours = () => api.get('/opening-hours');\r\n\r\n// Form Submission\r\nexport const submitForm = (formData) => {\r\n  const data = new FormData();\r\n  \r\n  // Step 1\r\n  data.append('fullName', formData.fullName);\r\n  data.append('companyName', formData.companyName);\r\n  data.append('email', formData.email);\r\n  if (formData.phoneNumber) data.append('phoneNumber', formData.phoneNumber);\r\n  data.append('businessLocation', formData.businessLocation);\r\n  \r\n  // Step 2\r\n  data.append('aboutInformation', formData.aboutInformation);\r\n  if (formData.industryId) data.append('industryId', formData.industryId);\r\n  if (formData.logoFile) data.append('logoFile', formData.logoFile);\r\n  \r\n  // Step 3\r\n  data.append('businessPhone', formData.businessPhone);\r\n  data.append('businessEmail', formData.businessEmail);\r\n  if (formData.openingDaysId) data.append('openingDaysId', formData.openingDaysId);\r\n  if (formData.customHours) data.append('customHours', formData.customHours);\r\n  \r\n  // Step 4 - Services\r\n  if (formData.services && formData.services.length > 0) {\r\n    formData.services.forEach(service => {\r\n      if (service.name && service.name.trim()) {\r\n        data.append('serviceNames', service.name);\r\n        data.append('serviceDescriptions', service.description || '');\r\n      }\r\n    });\r\n  }\r\n  \r\n  // Step 5\r\n  if (formData.colorPaletteId) data.append('colorPaletteId', formData.colorPaletteId);\r\n  if (formData.layoutStyleId) data.append('layoutStyleId', formData.layoutStyleId);\r\n  if (formData.imageFiles && formData.imageFiles.length > 0) {\r\n    formData.imageFiles.forEach(file => {\r\n      data.append('imageFiles', file);\r\n    });\r\n  }\r\n  \r\n  // Step 6\r\n  if (formData.facebookUrl) data.append('facebookUrl', formData.facebookUrl);\r\n  if (formData.instagramUrl) data.append('instagramUrl', formData.instagramUrl);\r\n  if (formData.googleBusinessUrl) data.append('googleBusinessUrl', formData.googleBusinessUrl);\r\n  if (formData.tiktokUrl) data.append('tiktokUrl', formData.tiktokUrl);\r\n  if (formData.testimonials) data.append('testimonials', formData.testimonials);\r\n  \r\n  // Step 7\r\n  data.append('primaryCta', formData.primaryCta);\r\n  data.append('ctaLinkOrPhone', formData.ctaLinkOrPhone);\r\n  if (formData.secondaryAction) data.append('secondaryAction', formData.secondaryAction);\r\n  \r\n  return api.post('/client-journeys/submit', data, {\r\n    headers: {\r\n      'Content-Type': 'multipart/form-data',\r\n    },\r\n  });\r\n};\r\n\r\n// Admin APIs\r\nexport const adminLogin = (email, password) => {\r\n  const formData = new URLSearchParams();\r\n  formData.append('email', email);\r\n  formData.append('password', password);\r\n  return api.post('/users/login', formData, {\r\n    headers: {\r\n      'Content-Type': 'application/x-www-form-urlencoded',\r\n    },\r\n  });\r\n};\r\n\r\nexport const getUsers = () => api.get('/users');\r\nexport const createUser = (user) => api.post('/users', user);\r\nexport const updateUser = (id, user) => api.put(`/users/${id}`, user);\r\nexport const deleteUser = (id) => api.delete(`/users/${id}`);\r\n\r\nexport const getOpeningDaysList = () => api.get('/opening-days');\r\nexport const createOpeningDays = (data) => api.post('/opening-days', data);\r\nexport const updateOpeningDays = (id, data) => api.put(`/opening-days/${id}`, data);\r\nexport const deleteOpeningDays = (id) => api.delete(`/opening-days/${id}`);\r\n\r\nexport const getOpeningHoursList = () => api.get('/opening-hours');\r\nexport const createOpeningHours = (data) => api.post('/opening-hours', data);\r\nexport const updateOpeningHours = (id, data) => api.put(`/opening-hours/${id}`, data);\r\nexport const deleteOpeningHours = (id) => api.delete(`/opening-hours/${id}`);\r\n\r\nexport const getClientJourneys = () => api.get('/client-journeys');\r\nexport const getClientJourney = (id) => api.get(`/client-journeys/${id}`);\r\nexport const downloadPromptPdf = (id) => \r\n  api.get(`/client-journeys/${id}/download-prompt`, { responseType: 'blob' });\r\nexport const downloadLogo = (fileName) => \r\n  api.get(`/client-journeys/logos/view/${fileName}`, { responseType: 'blob' });\r\nexport const downloadImage = (fileName) => \r\n  api.get(`/client-journeys/images/view/${fileName}`, { responseType: 'blob' });\r\n\r\nexport default api;\r\n\r\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/simplyforms/src/services/api.js b/simplyforms/src/services/api.js
+--- a/simplyforms/src/services/api.js	(revision 74907eac3744a1508a231fae3dfdc3bfb597e1d0)
++++ b/simplyforms/src/services/api.js	(date 1765188307630)
+@@ -1,6 +1,6 @@
+ import axios from 'axios';
+ 
+-const API_BASE_URL = 'https://formapi.simplyfound.com.na/api';
++const API_BASE_URL = 'https://clientapi.simplyfound.com.na/api';
+ 
+ const api = axios.create({
+   baseURL: API_BASE_URL,
+@@ -22,28 +22,28 @@
+ export const submitForm = (formData) => {
+   const data = new FormData();
+   
+-  // Step 1
+-  data.append('fullName', formData.fullName);
+-  data.append('companyName', formData.companyName);
+-  data.append('email', formData.email);
++  // Step 1 - Required fields
++  data.append('fullName', formData.fullName || '');
++  data.append('companyName', formData.companyName || '');
++  data.append('email', formData.email || '');
+   if (formData.phoneNumber) data.append('phoneNumber', formData.phoneNumber);
+-  data.append('businessLocation', formData.businessLocation);
++  data.append('businessLocation', formData.businessLocation || '');
+   
+-  // Step 2
+-  data.append('aboutInformation', formData.aboutInformation);
++  // Step 2 - Required fields
++  data.append('aboutInformation', formData.aboutInformation || '');
+   if (formData.industryId) data.append('industryId', formData.industryId);
+   if (formData.logoFile) data.append('logoFile', formData.logoFile);
+   
+-  // Step 3
+-  data.append('businessPhone', formData.businessPhone);
+-  data.append('businessEmail', formData.businessEmail);
++  // Step 3 - Required fields
++  data.append('businessPhone', formData.businessPhone || '');
++  data.append('businessEmail', formData.businessEmail || '');
+   if (formData.openingDaysId) data.append('openingDaysId', formData.openingDaysId);
+   if (formData.customHours) data.append('customHours', formData.customHours);
+   
+   // Step 4 - Services
+-  if (formData.services && formData.services.length > 0) {
++  if (formData.services && Array.isArray(formData.services) && formData.services.length > 0) {
+     formData.services.forEach(service => {
+-      if (service.name && service.name.trim()) {
++      if (service && service.name && service.name.trim()) {
+         data.append('serviceNames', service.name);
+         data.append('serviceDescriptions', service.description || '');
+       }
+@@ -53,28 +53,31 @@
+   // Step 5
+   if (formData.colorPaletteId) data.append('colorPaletteId', formData.colorPaletteId);
+   if (formData.layoutStyleId) data.append('layoutStyleId', formData.layoutStyleId);
+-  if (formData.imageFiles && formData.imageFiles.length > 0) {
++  if (formData.imageFiles && Array.isArray(formData.imageFiles) && formData.imageFiles.length > 0) {
+     formData.imageFiles.forEach(file => {
+-      data.append('imageFiles', file);
++      if (file) {
++        data.append('imageFiles', file);
++      }
+     });
+   }
+   
+-  // Step 6
++  // Step 6 - Optional social links
+   if (formData.facebookUrl) data.append('facebookUrl', formData.facebookUrl);
+   if (formData.instagramUrl) data.append('instagramUrl', formData.instagramUrl);
+   if (formData.googleBusinessUrl) data.append('googleBusinessUrl', formData.googleBusinessUrl);
+   if (formData.tiktokUrl) data.append('tiktokUrl', formData.tiktokUrl);
+   if (formData.testimonials) data.append('testimonials', formData.testimonials);
+   
+-  // Step 7
+-  data.append('primaryCta', formData.primaryCta);
+-  data.append('ctaLinkOrPhone', formData.ctaLinkOrPhone);
++  // Step 7 - Required fields
++  data.append('primaryCta', formData.primaryCta || 'Call Now');
++  data.append('ctaLinkOrPhone', formData.ctaLinkOrPhone || '');
+   if (formData.secondaryAction) data.append('secondaryAction', formData.secondaryAction);
+   
+   return api.post('/client-journeys/submit', data, {
+     headers: {
+       'Content-Type': 'multipart/form-data',
+     },
++    timeout: 120000, // 2 minutes timeout for file uploads
+   });
+ };
+ 
+Index: simplyforms/README.md
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+># SimplyForms - React Frontend\r\n\r\nThis is the React frontend application for SimplyFound website builder.\r\n\r\n## Features\r\n\r\n- **Multi-step Form**: 7-step form for collecting client information\r\n- **Progress Bar**: Visual progress indicator\r\n- **Admin Panel**: Full admin dashboard with CRUD operations\r\n- **Responsive Design**: Works on all screen sizes\r\n\r\n## Installation\r\n\r\n1. Navigate to the project directory:\r\n```bash\r\ncd simplyforms\r\n```\r\n\r\n2. Install dependencies:\r\n```bash\r\nnpm install\r\n```\r\n\r\n3. Start the development server:\r\n```bash\r\nnpm start\r\n```\r\n\r\nThe app will open at `http://localhost:3004`\r\n\r\n## Admin Access\r\n\r\nAccess the admin panel at: `http://localhost:3004/admin`\r\n\r\n## API Configuration\r\n\r\nThe app is configured to connect to the backend API at `https://formapi.simplyfound.com.na/api`\r\n\r\nThe backend API is hosted at `https://formapi.simplyfound.com.na`\r\n\r\n## Project Structure\r\n\r\n```\r\nsimplyforms/\r\n├── public/\r\n│   └── index.html\r\n├── src/\r\n│   ├── assets/\r\n│   │   └── logo.png\r\n│   ├── components/\r\n│   │   ├── Admin/\r\n│   │   │   ├── AdminLogin.js\r\n│   │   │   ├── AdminDashboard.js\r\n│   │   │   ├── FormsManagement.js\r\n│   │   │   ├── UsersManagement.js\r\n│   │   │   ├── OpeningDaysManagement.js\r\n│   │   │   └── OpeningHoursManagement.js\r\n│   │   ├── FormSteps/\r\n│   │   │   ├── Step0.js through Step7.js\r\n│   │   │   └── Confirmation.js\r\n│   │   ├── FormPage.js\r\n│   │   └── ProgressBar.js\r\n│   ├── services/\r\n│   │   └── api.js\r\n│   ├── App.js\r\n│   └── index.js\r\n└── package.json\r\n```\r\n\r\n## Available Scripts\r\n\r\n- `npm start` - Runs the app in development mode\r\n- `npm build` - Builds the app for production\r\n- `npm test` - Launches the test runner\r\n\r\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/simplyforms/README.md b/simplyforms/README.md
+--- a/simplyforms/README.md	(revision 74907eac3744a1508a231fae3dfdc3bfb597e1d0)
++++ b/simplyforms/README.md	(date 1765187573651)
+@@ -34,9 +34,9 @@
+ 
+ ## API Configuration
+ 
+-The app is configured to connect to the backend API at `https://formapi.simplyfound.com.na/api`
++The app is configured to connect to the backend API at `https://clientapi.simplyfound.com.na/api`
+ 
+-The backend API is hosted at `https://formapi.simplyfound.com.na`
++The backend API is hosted at `https://clientapi.simplyfound.com.na`
+ 
+ ## Project Structure
+ 
